@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarPlus, CheckCircle2, Search } from 'lucide-react';
 import { Alert, EmptyState, LoadingState, PageShell, StatusBadge } from '../../components/Ui.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -9,6 +9,7 @@ import {
   createPickupRequest,
   listPickupRequests,
 } from '../../services/biosyncService.js';
+import { isFirebaseConfigured } from '../../config/firebase.js';
 
 const initialForm = {
   materials: [],
@@ -21,7 +22,7 @@ const initialForm = {
 };
 
 export default function Agendamentos() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -30,16 +31,28 @@ export default function Agendamentos() {
   const [filters, setFilters] = useState({ search: '', city: '', status: '' });
   const [form, setForm] = useState(initialForm);
 
-  const loadRequests = async () => {
+  const loadRequests = useCallback(async () => {
+    if (isFirebaseConfigured && !isAuthenticated) {
+      setRequests([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
-    const data = await listPickupRequests();
-    setRequests(data);
-    setLoading(false);
-  };
+    try {
+      const data = await listPickupRequests();
+      setRequests(data);
+    } catch (err) {
+      setError('Faca login para carregar solicitacoes do Firestore.');
+      setRequests([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    loadRequests();
-  }, []);
+    if (!authLoading) loadRequests();
+  }, [authLoading, loadRequests]);
 
   const cities = useMemo(() => [...new Set(requests.map((request) => request.city))].sort(), [requests]);
 
@@ -75,6 +88,11 @@ export default function Agendamentos() {
 
     if (form.materials.length === 0 || !form.quantity.trim() || !form.address.trim() || !form.city.trim() || !form.preferredDate) {
       setError('Preencha materiais, quantidade, endereco, cidade e data preferida.');
+      return;
+    }
+
+    if (isFirebaseConfigured && !isAuthenticated) {
+      setError('Faca login para criar solicitacoes no Firestore.');
       return;
     }
 

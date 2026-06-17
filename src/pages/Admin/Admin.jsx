@@ -8,7 +8,7 @@ import {
 } from '../../services/biosyncService.js';
 
 export default function Admin() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [points, setPoints] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,14 +26,26 @@ export default function Admin() {
   };
 
   useEffect(() => {
-    load();
-  }, []);
+    if (!authLoading && user?.role === 'admin') {
+      load();
+    } else if (!authLoading) {
+      setLoading(false);
+    }
+  }, [authLoading, user?.role]);
 
   const changeStatus = async (id, status) => {
     await updateDisposalPointStatus(id, status);
     setMessage(`Ponto marcado como ${status}.`);
     await load();
   };
+
+  if (authLoading || loading) {
+    return (
+      <PageShell title="Admin">
+        <LoadingState />
+      </PageShell>
+    );
+  }
 
   if (user?.role !== 'admin') {
     return (
@@ -45,10 +57,7 @@ export default function Admin() {
 
   return (
     <PageShell title="Painel administrativo" subtitle="Valide pontos de descarte e acompanhe indicadores principais.">
-      {loading ? (
-        <LoadingState />
-      ) : (
-        <div className="space-y-6">
+      <div className="space-y-6">
           {message && <Alert type="success">{message}</Alert>}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {[
@@ -89,8 +98,7 @@ export default function Admin() {
               </article>
             ))}
           </div>
-        </div>
-      )}
+      </div>
     </PageShell>
   );
 }

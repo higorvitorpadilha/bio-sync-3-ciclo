@@ -4,9 +4,11 @@ import {
   doc,
   getDoc,
   getDocs,
+  query,
   serverTimestamp,
   setDoc,
   updateDoc,
+  where,
 } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../config/firebase';
 import { initialCollections } from '../data/demoData';
@@ -100,9 +102,11 @@ const updateLocal = (collectionName, id, data) => {
   return docs[existingIndex];
 };
 
-const listDocs = async (collectionName) => {
+const listDocs = async (collectionName, constraints = []) => {
   if (!isFirebaseConfigured || !db) return listLocal(collectionName);
-  const snapshot = await getDocs(collection(db, collectionName));
+  const collectionRef = collection(db, collectionName);
+  const source = constraints.length > 0 ? query(collectionRef, ...constraints) : collectionRef;
+  const snapshot = await getDocs(source);
   return snapshot.docs.map(normalizeDoc);
 };
 
@@ -153,7 +157,10 @@ export const saveUserProfile = async (uid, data) => {
 };
 
 export const listDisposalPoints = async ({ includePending = false } = {}) => {
-  const points = await listDocs('disposalPoints');
+  const points = await listDocs(
+    'disposalPoints',
+    includePending || !isFirebaseConfigured ? [] : [where('status', '==', 'approved')]
+  );
   return points
     .filter((point) => includePending || point.status === 'approved')
     .sort((a, b) => a.city.localeCompare(b.city) || a.name.localeCompare(b.name));
@@ -201,7 +208,10 @@ export const completePickupRequest = async (id) => {
 };
 
 export const listContent = async (collectionName) => {
-  const docs = await listDocs(collectionName);
+  const docs = await listDocs(
+    collectionName,
+    isFirebaseConfigured ? [where('published', '==', true)] : []
+  );
   return docs
     .filter((item) => item.published !== false)
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
