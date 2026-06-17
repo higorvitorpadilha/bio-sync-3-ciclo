@@ -1,0 +1,136 @@
+{
+  "users": [
+    {
+      "id": "demo-donor",
+      "uid": "demo-donor",
+      "role": "donor",
+      "displayName": "Doador BioSync",
+      "email": "doador@biosync.local",
+      "phone": "(16) 99999-1000",
+      "city": "Matao",
+      "state": "SP",
+      "photoUrl": "/user.png",
+      "createdAt": "2026-06-12T00:00:00.000Z",
+      "updatedAt": "2026-06-12T00:00:00.000Z"
+    },
+    {
+      "id": "demo-collector",
+      "uid": "demo-collector",
+      "role": "collector",
+      "displayName": "Catador BioSync",
+      "email": "catador@biosync.local",
+      "phone": "(16) 99999-2000",
+      "city": "Araraquara",
+      "state": "SP",
+      "photoUrl": "/user.png",
+      "createdAt": "2026-06-12T00:00:00.000Z",
+      "updatedAt": "2026-06-12T00:00:00.000Z"
+    },
+    {
+      "id": "demo-admin",
+      "uid": "demo-admin",
+      "role": "admin",
+      "displayName": "Admin BioSync",
+      "email": "admin@biosync.local",
+      "phone": "(16) 99999-3000",
+      "city": "Matao",
+      "state": "SP",
+      "photoUrl": "/user.png",
+      "createdAt": "2026-06-12T00:00:00.000Z",
+      "updatedAt": "2026-06-12T00:00:00.000Z"
+    }
+  ],
+  "disposalPoints": [
+    {
+      "id": "ponto-matao-doce-sonho",
+      "ownerId": "demo-admin",
+      "name": "Panificadora Doce Sonho",
+      "address": "Av. 7 de Setembro, 451 - Centro",
+      "city": "Matao",
+      "state": "SP",
+      "neighborhood": "Centro",
+      "geo": { "lat": -21.6036, "lng": -48.3657 },
+      "materials": ["Plastico", "Papel", "Vidro"],
+      "openingHours": "Segunda a sabado, 08h as 18h",
+      "imageUrl": "/cardConteudo.jpg",
+      "status": "approved",
+      "createdAt": "2026-06-12T00:00:00.000Z",
+      "updatedAt": "2026-06-12T00:00:00.000Z"
+    },
+    {
+      "id": "ponto-araraquara-eco-recicla",
+      "ownerId": "demo-admin",
+      "name": "Eco Recicla Araraquara",
+      "address": "Av. Bento de Abreu, 1172 - Jardim Primavera",
+      "city": "Araraquara",
+      "state": "SP",
+      "neighborhood": "Jardim Primavera",
+      "geo": { "lat": -21.7845, "lng": -48.1771 },
+      "materials": ["Plastico", "Papel", "Metal", "Vidro", "Eletronicos"],
+      "openingHours": "Todos os dias, 07h as 19h",
+      "imageUrl": "/PontoDescarte.png",
+      "status": "approved",
+      "createdAt": "2026-06-12T00:00:00.000Z",
+      "updatedAt": "2026-06-12T00:00:00.000Z"
+    },
+    {
+      "id": "ponto-matao-pendente",
+      "ownerId": "demo-donor",
+      "name": "Comercio Bom Descarte",
+      "address": "Rua Central, 82 - Centro",
+      "city": "Matao",
+      "state": "SP",
+      "neighborhood": "Centro",
+      "geo": { "lat": -21.6064, "lng": -48.3675 },
+      "materials": ["Oleo de cozinha", "Vidro"],
+      "openingHours": "Aguardando validacao",
+      "imageUrl": "/Agendamento.png",
+      "status": "pending",
+      "createdAt": "2026-06-12T00:00:00.000Z",
+      "updatedAt": "2026-06-12T00:00:00.000Z"
+    }
+  ],
+  "pickupRequests": [
+    {
+      "id": "coleta-001",
+      "donorId": "demo-donor",
+      "donorName": "Doador BioSync",
+      "materials": ["Plastico", "Papel"],
+      "quantity": "3 sacos medios",
+      "address": "Rua das Flores, 123 - Centro",
+      "city": "Matao",
+      "state": "SP",
+      "geo": { "lat": -21.6045, "lng": -48.365 },
+      "preferredDates": ["2026-06-15T13:00:00.000Z"],
+      "status": "open",
+      "assignedCollectorId": "",
+      "notes": "Material limpo e separado.",
+      "createdAt": "2026-06-12T00:00:00.000Z",
+      "updatedAt": "2026-06-12T00:00:00.000Z"
+    }
+  ],
+  "content": [
+    {
+      "id": "lixo-mal-descartado",
+      "slug": "lixo-mal-descartado",
+      "title": "As consequencias do lixo mal descartado",
+      "excerpt": "Entenda como o descarte inadequado afeta solo, agua, ar, saude publica e economia.",
+      "body": "O lixo mal descartado contamina ambientes naturais, atrai vetores de doencas e reduz a vida util de aterros. A solucao passa por educacao ambiental, coleta seletiva, logistica reversa e plataformas que conectem quem gera residuos a quem coleta e recicla.",
+      "imageUrl": "/Poluição.png",
+      "published": true,
+      "createdAt": "2026-06-12T00:00:00.000Z"
+    }
+  ],
+  "news": [
+    {
+      "id": "coleta-seletiva-cidades",
+      "slug": "coleta-seletiva-cidades",
+      "title": "Cidades ampliam programas de coleta seletiva",
+      "excerpt": "Municipios investem em pontos de entrega voluntaria e educacao ambiental.",
+      "body": "A ampliacao da coleta seletiva melhora indicadores ambientais e cria oportunidades de renda. Plataformas digitais ajudam a localizar pontos e registrar demandas de coleta.",
+      "imageUrl": "/cardConteudo.jpg",
+      "published": true,
+      "createdAt": "2026-06-12T00:00:00.000Z"
+    }
+  ]
+}

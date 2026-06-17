@@ -1,134 +1,127 @@
-import React, { useState, useEffect } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase/firebase';
+import React, { useState } from 'react';
 import { Dialog } from '@headlessui/react';
-import { getApp } from 'firebase/app';
-import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
+import { Link } from 'react-router-dom';
+import { X } from 'lucide-react';
+import { useAuth } from '../context/AuthContext.jsx';
+import { ROUTES } from '../routes/appRoutes.js';
 
 export default function LoginModal({ isOpen, onClose }) {
+  const { login, resetPassword, isFirebaseConfigured } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
-  const [isAppCheckReady, setIsAppCheckReady] = useState(false);
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Inicializa o AppCheck com reCAPTCHA
-  useEffect(() => {
-    if (!window.appCheckInitialized) {
-      const app = getApp();
-      console.log('Inicializando AppCheck...');
-      initializeAppCheck(app, {
-        provider: new ReCaptchaV3Provider('6LceH2IqAAAAACmtimxf5YJ9xFIMiHjN02rPp1Sj'),
-        isTokenAutoRefreshEnabled: true,
-      });
-      console.log('AppCheck inicializado com sucesso.');
-      setIsAppCheckReady(true); // Marca como pronto quando inicializado
-      window.appCheckInitialized = true;
-    } else {
-      console.log('AppCheck já inicializado.');
-      setIsAppCheckReady(true); // Caso já tenha sido inicializado, apenas habilita o botão de login
-    }
-  }, []);
-
-  // Lida com o submit do formulário de login
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setSuccess('');
+    setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      console.log('Login realizado com sucesso.');
-      onClose(); // Fecha o modal após o login
+      await login(email, password);
+      onClose();
     } catch (error) {
-      console.error('Erro ao fazer login:', error.message);
-      setError('Falha no login: ' + error.message);
+      setError('Nao foi possivel entrar. Confira e-mail e senha.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const cadeadoIcon = '/cadeado_aberto.png';
-  const XIcon = '/botao-apagar.png';
-  const avatarIcon = '/avatar.png';
+  const handlePasswordReset = async () => {
+    setError(null);
+    setSuccess('');
+    try {
+      await resetPassword(email);
+      setSuccess('Se o e-mail existir, enviaremos as instrucoes de recuperacao.');
+    } catch (error) {
+      setError(error.message || 'Informe seu e-mail antes de recuperar a senha.');
+    }
+  };
+
   const logo = '/logo-bio-sync-login.png';
 
   return (
-    <Dialog open={isOpen} onClose={onClose}>
-      <Dialog.Panel className="fixed inset-0 flex items-center justify-center mt-24">
-        <div className="bg-black-1 p-8 rounded-xl opacity-95 shadow-lg max-w-sm w-full text-white relative">
+    <Dialog open={isOpen} onClose={onClose} className="relative z-50">
+      <div className="fixed inset-0 bg-slate-950/50" aria-hidden="true" />
+      <div className="fixed inset-0 flex items-center justify-center p-4">
+        <Dialog.Panel className="w-full max-w-md rounded-md bg-slate-950 p-6 text-white shadow-xl">
           <button
             onClick={onClose}
-            className="absolute top-5 right-5 text-red-500 hover:fill-white-1 transition-colors"
+            className="absolute right-5 top-5 rounded-md p-1 text-white/70 hover:bg-white/10 hover:text-white"
             aria-label="Fechar"
           >
-            <img src={XIcon} className="h-5 w-5" alt='IconeX' />
+            <X size={20} />
           </button>
-          <div className="flex items-center justify-start space-x-20">
-            <img src={logo} className="object-scale-down h-20 w-10" alt="Logo" />
-            <Dialog.Title className="text-white-1 text-2xl font-bold">Login</Dialog.Title>
+
+          <div className="mb-6 flex items-center gap-4">
+            <img src={logo} className="h-14 w-12 object-contain" alt="BioSync" />
+            <div>
+              <Dialog.Title className="text-2xl font-bold">Login</Dialog.Title>
+              <p className="text-sm text-white/65">
+                {isFirebaseConfigured ? 'Ambiente Firebase' : 'Modo demo: use doador@biosync.local'}
+              </p>
+            </div>
           </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="mb-4">
-              <div className="relative">
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="placeholder-white-1 bg-opacity-10 placeholder-opacity-200 mt-1 block w-full bg-gray-1 border border-gray-600 rounded-md p-2 pl-2 focus:outline-none focus:ring focus:ring-green-1 text-white-1"
-                  required
-                  placeholder="E-mail"
-                />
-                <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white-1">
-                  <img src={avatarIcon} className="h-6 w-6" alt="Avatar" />
-                </span>
-              </div>
+            <div>
+              <label htmlFor="login-email" className="mb-1 block text-sm font-semibold">
+                E-mail
+              </label>
+              <input
+                type="email"
+                id="login-email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-green-400"
+                required
+                placeholder="seu@email.com"
+              />
             </div>
-            <div className="mb-4">
-              <div className="relative">
-                <input
-                  type="password"
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="placeholder-white-1 bg-opacity-10 placeholder-opacity-200 mt-1 block w-full bg-gray-1 border border-gray-600 rounded-md p-2 pl-2 focus:outline-none focus:ring focus:ring-green-1 text-white-1"
-                  required
-                  placeholder="Senha"
-                />
-                <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                  <img src={cadeadoIcon} className="h-6 w-6" alt="Cadeado" />
-                </span>
-              </div>
-              <div className="flex items-center mb-4">
-                <input
-                  id="default-radio-1"
-                  type="radio"
-                  value=""
-                  name="default-radio"
-                  className="w-4 h-10 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                />
-                <label htmlFor="default-radio-1" className="ms-2 text-sm font-medium text-white-1 dark:text-gray-300">
-                  Lembrar-se
-                </label>
-                <a href="/" className="absolute right-8 text-white-1 hover:text-green-1">
-                  Esqueceu sua senha?
-                </a>
-              </div>
+
+            <div>
+              <label htmlFor="login-password" className="mb-1 block text-sm font-semibold">
+                Senha
+              </label>
+              <input
+                type="password"
+                id="login-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-md border border-white/20 bg-white/10 px-3 py-2 text-white outline-none focus:ring-2 focus:ring-green-400"
+                required
+                placeholder="Senha"
+              />
+              <button
+                type="button"
+                onClick={handlePasswordReset}
+                className="mt-2 text-sm font-semibold text-green-300 hover:text-green-200"
+              >
+                Esqueci minha senha
+              </button>
             </div>
+
             <button
               type="submit"
-              className="w-full bg-green-1 hover:text-white-1 font-bold py-2 rounded-md transition"
-              disabled={!isAppCheckReady}
+              className="w-full rounded-md bg-green-500 py-2 font-bold text-slate-950 transition hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-70"
+              disabled={loading}
             >
-              {isAppCheckReady ? 'Login' : 'Carregando reCAPTCHA...'}
+              {loading ? 'Entrando...' : 'Entrar'}
             </button>
-            {error && <p className="text-red-500 mt-2">{error}</p>}
+            {error && <p className="rounded-md bg-red-500/15 p-3 text-sm text-red-200">{error}</p>}
+            {success && <p className="rounded-md bg-green-500/15 p-3 text-sm text-green-200">{success}</p>}
           </form>
-          <div className="flex justify-center text-sm mt-4">
-            <p className="text-white-1 mr-2">Não tem cadastro?</p>
-            <a href="/" className="text-white-1 hover:text-green-1">
+
+          <div className="mt-4 flex justify-center gap-2 text-sm">
+            <span className="text-white/70">Nao tem cadastro?</span>
+            <Link to={ROUTES.register} onClick={onClose} className="font-semibold text-green-300 hover:text-green-200">
               Registre-se
-            </a>
+            </Link>
           </div>
-        </div>
-      </Dialog.Panel>
+        </Dialog.Panel>
+      </div>
     </Dialog>
   );
 }

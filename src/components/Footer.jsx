@@ -1,13 +1,17 @@
-
-
 export default function Footer() {
-
   return (
-    <footer className="bg-green-1 py-6 sm:py-8">
-      <div className="container mx-auto px-4 sm:px-6">
-        <div className="bg-green-1 p-4 sm:p-8 rounded-lg">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8 text-black-1">Idealizadores</h2>
-          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-6 sm:mb-8">
+    <footer className="mt-auto bg-green-700 py-8 text-white">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-8 md:grid-cols-[1fr_2fr] md:items-center">
+          <div>
+            <h2 className="text-2xl font-bold">BioSync</h2>
+            <p className="mt-2 max-w-md text-sm text-white/80">
+              Plataforma para conectar doadores, catadores e pontos de descarte com dados rastreaveis.
+            </p>
+          </div>
+          <div>
+            <h3 className="mb-4 text-center text-lg font-semibold md:text-right">Idealizadores</h3>
+            <div className="flex flex-wrap justify-center gap-4 md:justify-end">
             {[
               { image: "/foto1.jpg", link: "https://www.linkedin.com/in/jo%C3%A3o-tavares-19937b24b/" },
               { image: "/foto2.jpeg", link: "https://www.linkedin.com/in/edson-henrique-pereira-dsm/" },
@@ -23,17 +27,17 @@ export default function Footer() {
                 className="w-16 h-16 sm:w-20 sm:h-20 lg:w-28 lg:h-28"
               >
                 <img
-                  src={item.image}
-                  alt={`Imagem do idealizador ${index + 1}`}
-                  className="w-full h-full object-cover rounded-full shadow-lg"
+                src={item.image}
+                alt={`Imagem do idealizador ${index + 1}`}
+                  className="h-16 w-16 rounded-full object-cover shadow-lg ring-2 ring-white/40 sm:h-20 sm:w-20"
                 />
               </a>
             ))}
+            </div>
           </div>
-          <p className="text-center text-base sm:text-lg text-black-1 font-semibold">© Copyright 2024 | BIOSYNC</p>
         </div>
+        <p className="mt-8 text-center text-sm text-white/75">© Copyright 2026 | BIOSYNC</p>
       </div>
     </footer>
   );
 }
-

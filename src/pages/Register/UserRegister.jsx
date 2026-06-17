@@ -1,48 +1,44 @@
 import React, { useState } from 'react';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { collection, addDoc } from 'firebase/firestore';
-import { auth, db } from '../../firebase/firebase';
-
+import { useNavigate } from 'react-router-dom';
+import { Alert, PageShell } from '../../components/Ui.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { brazilianStates } from '../../data/demoData.js';
+import { ROUTES } from '../../routes/appRoutes.js';
 
 export default function CadastroUsuario() {
-  const [nome, setNome] = useState('');
+  const { register } = useAuth();
+  const navigate = useNavigate();
+  const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
-  const [confirmarSenha, setConfirmarSenha] = useState('');
-  const [cpf, setCpf] = useState('');
-  const [celular, setCelular] = useState('');
+  const [phone, setPhone] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('SP');
+  const [role, setRole] = useState('donor');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [erro, setErro] = useState('');
   const [sucesso, setSucesso] = useState(false);
   const [carregando, setCarregando] = useState(false);
-  
-
-  const validarCPF = (cpf) => {
-    cpf = cpf.replace(/[^\d]+/g,'');
-    if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
-    let soma = 0, resto;
-    for (let i=1; i<=9; i++) soma += parseInt(cpf.substring(i-1, i)) * (11 - i);
-    resto = (soma * 10) % 11;
-    if (resto === 10 || resto === 11) resto = 0;
-    if (resto !== parseInt(cpf.substring(9, 10))) return false;
-    soma = 0;
-    for (let i = 1; i <= 10; i++) soma += parseInt(cpf.substring(i-1, i)) * (12 - i);
-    resto = (soma * 10) % 11;
-    if (resto === 10 || resto === 11) resto = 0;
-    if (resto !== parseInt(cpf.substring(10, 11))) return false;
-    return true;
-  };
 
   const validarDados = () => {
-    if (senha !== confirmarSenha) {
-      setErro('As senhas não coincidem.');
+    if (displayName.trim().length < 3) {
+      setErro('Informe um nome com pelo menos 3 caracteres.');
       return false;
     }
-    if (!validarCPF(cpf)) {
-      setErro('CPF inválido.');
+    if (!city.trim()) {
+      setErro('Informe a cidade.');
       return false;
     }
-    if (celular.length < 10) {
-      setErro('Número de celular inválido.');
+    if (phone.replace(/\D/g, '').length < 10) {
+      setErro('Informe um celular valido.');
+      return false;
+    }
+    if (password.length < 6) {
+      setErro('A senha deve ter pelo menos 6 caracteres.');
+      return false;
+    }
+    if (password !== confirmPassword) {
+      setErro('As senhas nao coincidem.');
       return false;
     }
     return true;
@@ -52,167 +48,95 @@ export default function CadastroUsuario() {
     e.preventDefault();
     setErro('');
     setSucesso(false);
+
+    if (!validarDados()) return;
+
     setCarregando(true);
-  
-    if (!validarDados()) {
-      setCarregando(false);
-      return;
-    }
-  
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
-      const user = userCredential.user;
-  
-      await addDoc(collection(db, 'usuarios'), {
-        uid: user.uid,
-        nome,
+      await register({
+        displayName: displayName.trim(),
         email,
-        cpf,
-        celular,
+        phone,
+        city: city.trim(),
+        state,
+        role,
+        password,
       });
-  
       setSucesso(true);
-      setNome('');
-      setEmail('');
-      setSenha('');
-      setConfirmarSenha('');
-      setCpf('');
-      setCelular('');
+      setTimeout(() => navigate(ROUTES.profile), 700);
     } catch (error) {
-      console.error('Erro ao cadastrar usuário:', error); // Log do erro
       if (error.code === 'auth/email-already-in-use') {
-        setErro('Este e-mail já está em uso por outro usuário.');
-      } else if (error.code === 'auth/weak-password') {
-        setErro('A senha deve ter pelo menos 6 caracteres.');
+        setErro('Este e-mail ja esta em uso por outro usuario.');
       } else {
-        setErro('Erro ao cadastrar usuário: ' + error.message);
+        setErro('Erro ao cadastrar usuario. Tente novamente.');
       }
     } finally {
       setCarregando(false);
     }
   };
-  
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-      <main className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="w-full max-w-4xl bg-white shadow-md rounded-lg overflow-hidden">
-          <div className="p-6 space-y-6">
-            <div className="flex justify-center items-center space-x-4">
-              <h2 className="text-2xl font-bold">Cadastro de usuário</h2>
-            </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label htmlFor="nome" className="block text-sm font-medium text-gray-700">Nome completo</label>
-                  <input
-                    id="nome"
-                    className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
-                               focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Nome completo"
-                    value={nome}
-                    onChange={(e) => setNome(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">E-mail</label>
-                  <input
-                    id="email"
-                    type="email"
-                    className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
-                               focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="E-mail"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="cpf" className="block text-sm font-medium text-gray-700">CPF</label>
-                  <input
-                    id="cpf"
-                    className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
-                               focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="CPF"
-                    value={cpf}
-                    onChange={(e) => setCpf(e.target.value)}
-                    maxLength={14}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="celular" className="block text-sm font-medium text-gray-700">Celular</label>
-                  <input
-                    id="celular"
-                    type="tel"
-                    className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
-                               focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Celular"
-                    value={celular}
-                    onChange={(e) => setCelular(e.target.value)}
-                    maxLength={15}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="senha" className="block text-sm font-medium text-gray-700">Senha</label>
-                  <input
-                    id="senha"
-                    type="password"
-                    className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
-                               focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Senha"
-                    value={senha}
-                    onChange={(e) => setSenha(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="confirmarSenha" className="block text-sm font-medium text-gray-700">Confirmar Senha</label>
-                  <input
-                    id="confirmarSenha"
-                    type="password"
-                    className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm shadow-sm placeholder-gray-400
-                               focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    placeholder="Confirmar senha"
-                    value={confirmarSenha}
-                    onChange={(e) => setConfirmarSenha(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              
-              {erro && (
-                <div className="flex items-center space-x-2 text-red-600 text-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  <span>{erro}</span>
-                </div>
-              )}
-              {sucesso && (
-                <div className="flex items-center space-x-2 text-green-600 text-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span>Cadastro realizado com sucesso!</span>
-                </div>
-              )}
-            </form>
-          </div>
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-            <button 
-              type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-1 hover:text-white-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              disabled={carregando}
-              onClick={handleSubmit}
-            >
-              {carregando ? 'Cadastrando...' : 'Cadastrar'}
-            </button>
-          </div>
+    <PageShell
+      title="Cadastro de usuario"
+      subtitle="CPF completo nao e armazenado nesta versao para reduzir risco LGPD. O perfil define as permissoes no Firestore."
+    >
+      <form onSubmit={handleSubmit} className="mx-auto max-w-4xl rounded-md border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <Field label="Nome completo" id="nome">
+            <input id="nome" className="form-input" placeholder="Nome completo" value={displayName} onChange={(e) => setDisplayName(e.target.value)} required />
+          </Field>
+          <Field label="E-mail" id="email">
+            <input id="email" type="email" className="form-input" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          </Field>
+          <Field label="Celular" id="celular">
+            <input id="celular" type="tel" className="form-input" placeholder="(16) 99999-0000" value={phone} onChange={(e) => setPhone(e.target.value)} required />
+          </Field>
+          <Field label="Cidade" id="cidade">
+            <input id="cidade" className="form-input" placeholder="Matao" value={city} onChange={(e) => setCity(e.target.value)} required />
+          </Field>
+          <Field label="Estado" id="estado">
+            <select id="estado" value={state} onChange={(e) => setState(e.target.value)} className="form-input">
+              {brazilianStates.map((uf) => (
+                <option key={uf} value={uf}>
+                  {uf}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Tipo de perfil" id="role">
+            <select id="role" value={role} onChange={(e) => setRole(e.target.value)} className="form-input">
+              <option value="donor">Doador</option>
+              <option value="collector">Catador</option>
+            </select>
+          </Field>
+          <Field label="Senha" id="senha">
+            <input id="senha" type="password" className="form-input" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          </Field>
+          <Field label="Confirmar senha" id="confirmarSenha">
+            <input id="confirmarSenha" type="password" className="form-input" placeholder="Confirmar senha" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+          </Field>
         </div>
-      </main>
+
+        <div className="mt-5 space-y-3">
+          {erro && <Alert type="error">{erro}</Alert>}
+          {sucesso && <Alert type="success">Cadastro realizado. Redirecionando para o perfil...</Alert>}
+        </div>
+
+        <button type="submit" className="mt-6 w-full rounded-md bg-green-700 px-4 py-3 font-bold text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-70" disabled={carregando}>
+          {carregando ? 'Cadastrando...' : 'Cadastrar usuario'}
+        </button>
+      </form>
+    </PageShell>
+  );
+}
+
+function Field({ label, id, children }) {
+  return (
+    <div>
+      <label htmlFor={id} className="mb-1 block text-sm font-semibold text-slate-700">
+        {label}
+      </label>
+      {children}
     </div>
   );
 }

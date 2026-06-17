@@ -1,86 +1,63 @@
-import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
-import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
 
-import Home from "./pages/Home/Home.jsx";
-import ButtonsUserRegister from "./pages/Register/ButtonsUserRegister.jsx";
-import PontosDeDescarte from "./pages/dropPoints/PontosDeDescarte.jsx";
-import LoginModal from "./components/LoginModal.jsx";
-import RegistroDeUsuarios from "./pages/Register/UserRegister.jsx";
-import Header from "./components/Header.jsx";
-import Footer from "./components/Footer.jsx";
-import Agendamentos from "./pages/Agendamentos/Agendamentos.jsx";
-import Conteudos from "./pages/Conteudos/Conteudos.jsx";
-import Artigo1 from "./pages/Conteudos/Artigo1.jsx";
-import Noticias from "./pages/Noticias/Noticias.jsx";
-import VLibras from "./components/VLibras.jsx";
+import Home from './pages/Home/Home.jsx';
+import ButtonsUserRegister from './pages/Register/ButtonsUserRegister.jsx';
+import PontosDeDescarte from './pages/dropPoints/PontosDeDescarte.jsx';
+import LoginModal from './components/LoginModal.jsx';
+import RegistroDeUsuarios from './pages/Register/UserRegister.jsx';
+import Header from './components/Header.jsx';
+import Footer from './components/Footer.jsx';
+import Agendamentos from './pages/Agendamentos/Agendamentos.jsx';
+import Conteudos from './pages/Conteudos/Conteudos.jsx';
+import ContentDetail from './pages/Conteudos/ContentDetail.jsx';
+import Noticias from './pages/Noticias/Noticias.jsx';
+import DropPointsRegister from './pages/Register/DropPoints.jsx';
+import Profile from './pages/Profile.jsx';
+import Admin from './pages/Admin/Admin.jsx';
+import NotFound from './pages/NotFound.jsx';
+import VLibras from './components/VLibras.jsx';
+import { AuthProvider } from './context/AuthContext.jsx';
+import { legacyRouteRedirects, ROUTES } from './routes/appRoutes.js';
+import './App.css';
 
 function App() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [showUpdate, setShowUpdate] = useState(false);
-
-  useEffect(() => {
-    serviceWorkerRegistration.register({
-      onUpdate: (registration) => {
-        setShowUpdate(true);
-        window.swUpdate = registration.waiting;
-      },
-    });
-  }, []);
-
-  const reloadPage = () => {
-    if (window.swUpdate) {
-      window.swUpdate.postMessage({ type: "SKIP_WAITING" });
-      window.swUpdate.addEventListener("statechange", (event) => {
-        if (event.target.state === "activated") {
-          window.location.reload();
-        }
-      });
-    }
-  };
 
   return (
-    <Router>
-      <div className="App">
-        <ConditionalHeader openLoginModal={() => setIsLoginModalOpen(true)} />
-        <Routes>
-          <Route path="/" element={<Home openLoginModal={() => setIsLoginModalOpen(true)} />} />
-          <Route path="/buttonsUserRegister" element={<ButtonsUserRegister />} />
-          <Route path="/dropPoints" element={<PontosDeDescarte />} />
-          <Route path="/UserRegister" element={<RegistroDeUsuarios />} />
-          <Route path="/Agendamentos" element={<Agendamentos />} />
-          <Route path="/Conteudos" element={<Conteudos />} />
-          <Route path="/Artigo1" element={<Artigo1 />} />
-          <Route path="/Noticias" element={<Noticias />} />
-        </Routes>
-        {showUpdate && (
-          <div className="update-notification">
-            <p>Nova versão disponível!</p>
-            <button onClick={reloadPage}>Atualizar</button>
-          </div>
-        )}
-        <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
-        <ConditionalFooter />
-        <VLibras />
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <div className="flex min-h-screen flex-col bg-slate-50 text-slate-950">
+          <Header openLoginModal={() => setIsLoginModalOpen(true)} />
+          <Routes>
+            <Route path={ROUTES.home} element={<Home />} />
+            <Route path={ROUTES.register} element={<ButtonsUserRegister />} />
+            <Route path={ROUTES.userRegister} element={<RegistroDeUsuarios />} />
+            <Route path={ROUTES.pointRegister} element={<DropPointsRegister />} />
+            <Route path={ROUTES.points} element={<PontosDeDescarte />} />
+            <Route path={ROUTES.appointments} element={<Agendamentos />} />
+            <Route path={ROUTES.content} element={<Conteudos />} />
+            <Route path={`${ROUTES.content}/:slug`} element={<ContentDetail type="content" />} />
+            <Route path={ROUTES.news} element={<Noticias />} />
+            <Route path={`${ROUTES.news}/:slug`} element={<ContentDetail type="news" />} />
+            <Route path={ROUTES.profile} element={<Profile />} />
+            <Route path={ROUTES.admin} element={<Admin />} />
+            {legacyRouteRedirects.map((route) => (
+              <Route
+                key={route.from}
+                path={route.from}
+                element={<Navigate to={route.to} replace />}
+              />
+            ))}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
+          <Footer />
+          <VLibras />
+        </div>
+      </Router>
+    </AuthProvider>
   );
-}
-
-function ConditionalHeader({ openLoginModal }) {
-  const location = useLocation();
-  const showHeaderRoutes = ["/", "/UserRegister", "/buttonsUserRegister", "/dropPoints", "/Agendamentos", "/Conteudos", "/Artigo1", "/Noticias"];
-
-  return showHeaderRoutes.includes(location.pathname) ? (
-    <Header openLoginModal={openLoginModal} />
-  ) : null;
-}
-
-function ConditionalFooter() {
-  const location = useLocation();
-  const showFooterRoutes = ["/", "/UserRegister", "/buttonsUserRegister", "/dropPoints", "/Agendamentos", "/Conteudos", "/Artigo1", "/Noticias"];
-
-  return showFooterRoutes.includes(location.pathname) ? <Footer /> : null;
 }
 
 export default App;
